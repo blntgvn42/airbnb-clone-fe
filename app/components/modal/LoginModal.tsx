@@ -1,20 +1,22 @@
 'use client'
 
-import axios from "axios";
 import {AiFillGithub} from "react-icons/ai";
 import {FcGoogle} from "react-icons/fc";
-import {useState, useCallback} from "react";
+import {useCallback, useState} from "react";
 import {FieldValues, SubmitHandler, useForm} from "react-hook-form";
 
-import Modal from "@/app/components/modal/Modal";
 import Heading from "@/app/components/Heading";
 import Input from "@/app/components/Input";
 import toast from "react-hot-toast";
 import Button from "@/app/components/Button";
-import useRegisterModal from "@/app/hooks/useRegisterModal";
+import useLoginModal from "@/app/hooks/useLoginModal";
+import Modal from "@/app/components/modal/Modal";
+import {signIn} from "next-auth/react";
+import {useRouter} from "next/navigation";
 
-const RegisterModal = () => {
-    const registerModal = useRegisterModal()
+const LoginModal = () => {
+    const router = useRouter()
+    const loginModal = useLoginModal()
     const [isLoading, setIsLoading] = useState(false)
     const {
         register,
@@ -22,7 +24,6 @@ const RegisterModal = () => {
         formState: {errors},
     } = useForm<FieldValues>({
         defaultValues: {
-            name: '',
             email: '',
             password: '',
         }
@@ -30,28 +31,31 @@ const RegisterModal = () => {
 
     const onSubmit: SubmitHandler<FieldValues> = useCallback(async (data) => {
         setIsLoading(true)
-        await axios
-            .post('/api/auth/register', data)
-            .then(() => registerModal.onClose())
-            .catch(() => toast.error("Something went wrong!"))
-            .finally(() => setIsLoading(false))
-    }, [registerModal])
+        await signIn('credentials', {
+            ...data,
+            redirect: false,
+        })
+            .then((res) => {
+                setIsLoading(false)
+                if (res?.ok) {
+                    toast.success('Logged in')
+                    router.refresh()
+                    loginModal.onClose()
+                }
+
+                if (res?.error){
+                    toast.error('Invalid credentials')
+                }
+            })
+    }, [loginModal, router])
 
     const bodyContent = (
         <div className="flex flex-col gap-4">
-            <Heading title="Welcome to AirBnb" subtitle="Create an account" center/>
+            <Heading title="Welcome back to AirBnb" subtitle="Sign in" center/>
             <Input
                 required
                 id="email"
                 label="Email"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-            />
-            <Input
-                required
-                id="name"
-                label="Name"
                 disabled={isLoading}
                 register={register}
                 errors={errors}
@@ -81,9 +85,9 @@ const RegisterModal = () => {
                 <Button outline label="Continue with Github" icon={AiFillGithub} onClick={() => {
                 }}/>
                 <div className="flex flex-row items-center gap-2">
-                    <div className="text-neutral-400">Already have an account?</div>
+                    <div className="text-neutral-400">Dont have an account?</div>
                     <div className="text-neutral-800 cursor-pointer hover:underline"
-                         onClick={registerModal.onClose}>Login
+                         onClick={loginModal.onClose}>Register
                     </div>
                 </div>
             </div>
@@ -93,10 +97,10 @@ const RegisterModal = () => {
     return (
         <Modal
             disabled={isLoading}
-            isOpen={registerModal.isOpen}
-            title="Register"
+            isOpen={loginModal.isOpen}
+            title="Login"
             actionLabel="Continue"
-            onClose={registerModal.onClose}
+            onClose={loginModal.onClose}
             onSubmit={handleSubmit(onSubmit)}
             body={bodyContent}
             footer={footerContent}
@@ -104,4 +108,4 @@ const RegisterModal = () => {
     )
 }
 
-export default RegisterModal
+export default LoginModal
