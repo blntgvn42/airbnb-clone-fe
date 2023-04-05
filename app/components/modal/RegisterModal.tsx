@@ -3,7 +3,7 @@
 import axios from "axios";
 import {AiFillGithub} from "react-icons/ai";
 import {FcGoogle} from "react-icons/fc";
-import {useState, useCallback} from "react";
+import {useCallback, useState} from "react";
 import {FieldValues, SubmitHandler, useForm} from "react-hook-form";
 
 import Modal from "@/app/components/modal/Modal";
@@ -12,9 +12,11 @@ import Input from "@/app/components/Input";
 import toast from "react-hot-toast";
 import Button from "@/app/components/Button";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
+import useLoginModal from "@/app/hooks/useLoginModal";
 
 const RegisterModal = () => {
     const registerModal = useRegisterModal()
+    const loginModal = useLoginModal()
     const [isLoading, setIsLoading] = useState(false)
     const {
         register,
@@ -27,6 +29,11 @@ const RegisterModal = () => {
             password: '',
         }
     })
+
+    const toggleModal = useCallback(() => {
+        registerModal.onClose()
+        loginModal.onOpen()
+    }, [registerModal, loginModal])
 
     const onSubmit: SubmitHandler<FieldValues> = useCallback(async (data) => {
         setIsLoading(true)
@@ -83,7 +90,7 @@ const RegisterModal = () => {
                 <div className="flex flex-row items-center gap-2">
                     <div className="text-neutral-400">Already have an account?</div>
                     <div className="text-neutral-800 cursor-pointer hover:underline"
-                         onClick={registerModal.onClose}>Login
+                         onClick={toggleModal}>Login
                     </div>
                 </div>
             </div>

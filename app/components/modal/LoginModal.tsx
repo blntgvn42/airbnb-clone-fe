@@ -13,10 +13,12 @@ import useLoginModal from "@/app/hooks/useLoginModal";
 import Modal from "@/app/components/modal/Modal";
 import {signIn} from "next-auth/react";
 import {useRouter} from "next/navigation";
+import useRegisterModal from "@/app/hooks/useRegisterModal";
 
 const LoginModal = () => {
-    const router = useRouter()
     const loginModal = useLoginModal()
+    const registerModal = useRegisterModal()
+    const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const {
         register,
@@ -28,6 +30,11 @@ const LoginModal = () => {
             password: '',
         }
     })
+
+    const toggleModal = useCallback(() => {
+        loginModal.onClose()
+        registerModal.onOpen()
+    }, [registerModal, loginModal])
 
     const onSubmit: SubmitHandler<FieldValues> = useCallback(async (data) => {
         setIsLoading(true)
@@ -43,7 +50,7 @@ const LoginModal = () => {
                     loginModal.onClose()
                 }
 
-                if (res?.error){
+                if (res?.error) {
                     toast.error('Invalid credentials')
                 }
             })
@@ -87,7 +94,7 @@ const LoginModal = () => {
                 <div className="flex flex-row items-center gap-2">
                     <div className="text-neutral-400">Dont have an account?</div>
                     <div className="text-neutral-800 cursor-pointer hover:underline"
-                         onClick={loginModal.onClose}>Register
+                         onClick={toggleModal}>Register
                     </div>
                 </div>
             </div>

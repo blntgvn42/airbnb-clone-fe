@@ -8,9 +8,10 @@ import useRegisterModal from "@/app/hooks/useRegisterModal";
 import useLoginModal from "@/app/hooks/useLoginModal";
 import {User} from "@prisma/client";
 import {signOut} from "next-auth/react";
+import useRentModal from "@/app/hooks/useRentModal";
 
 interface UserMenuProps {
-    currentUser?: User | null
+    currentUser?: User | null;
 }
 
 
@@ -18,16 +19,25 @@ const UserMenu: FC<UserMenuProps> = ({currentUser}) => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const registerModal = useRegisterModal()
     const loginModal = useLoginModal()
+    const rentModal = useRentModal()
 
     const toggleOpen = useCallback(() => {
         setIsOpen((value) => !value)
     }, [])
 
+    const onRent = useCallback(() => {
+        if (!currentUser) {
+            return loginModal.onOpen()
+        }
+
+        rentModal.onOpen()
+    }, [currentUser, loginModal, rentModal])
+
     return (
         <div className="relative">
             <div className="flex flex-row items-center gap-3">
                 <div
-                    // onClick={toggleOpen}
+                    onClick={onRent}
                     className="hidden md:block text-sm font-semibold py-3 px-4 rounded-full hover:bg-neutral-100 transition cursor-pointer">
                     Airbnb your home
                 </div>
@@ -52,7 +62,7 @@ const UserMenu: FC<UserMenuProps> = ({currentUser}) => {
                                         <MenuItem label="My Favourites" onClick={() => console.log('reviews')}/>
                                         <MenuItem label="My Reservations" onClick={() => console.log('reviews')}/>
                                         <MenuItem label="My Properties" onClick={() => console.log('reviews')}/>
-                                        <MenuItem label="Airbnb My Home" onClick={() => console.log('reviews')}/>
+                                        <MenuItem label="Airbnb My Home" onClick={rentModal.onOpen}/>
                                         <MenuItem label="Logout" onClick={() => signOut()}/>
                                     </>
                                     :

@@ -7,7 +7,7 @@ import {FC} from "react";
 import Categories from "@/app/components/category/Categories";
 
 interface NavbarProps {
-    currentUser?: User | null
+    currentUser?: User | null;
 }
 
 const Navbar: FC<NavbarProps> = ({currentUser}) => {

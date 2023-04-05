@@ -3,7 +3,7 @@
 import {FC, ReactNode, useEffect, useState} from "react";
 
 interface ClientOnlyProps {
-    children: ReactNode
+    children: ReactNode;
 }
 
 const ClientOnly: FC<ClientOnlyProps> = ({children}) => {
