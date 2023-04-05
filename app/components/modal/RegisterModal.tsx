@@ -7,10 +7,10 @@ import {useCallback, useState} from "react";
 import {FieldValues, SubmitHandler, useForm} from "react-hook-form";
 
 import Modal from "@/app/components/modal/Modal";
-import Heading from "@/app/components/Heading";
-import Input from "@/app/components/Input";
+import Heading from "@/app/components/elements/Heading";
+import Input from "@/app/components/elements/Input";
 import toast from "react-hot-toast";
-import Button from "@/app/components/Button";
+import Button from "@/app/components/elements/Button";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
 import useLoginModal from "@/app/hooks/useLoginModal";
 
