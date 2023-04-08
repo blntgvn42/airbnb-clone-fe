@@ -9,6 +9,7 @@ import CategoryInput from "@/app/components/rent-stepper/CategoryInput";
 import {FieldValues, useForm} from "react-hook-form";
 import CountrySelect from "@/app/components/rent-stepper/CountrySelect";
 import dynamic from "next/dynamic";
+import Counter from "@/app/components/rent-stepper/Counter";
 
 enum STEPS {
     CATEGORY,
@@ -47,6 +48,9 @@ const RentModal = () => {
 
     const categoryWatcher = watch("category");
     const locationWatcher = watch("location");
+    const guestCountWatcher = watch("guestCount");
+    const roomCountWatcher = watch("roomCount");
+    const bathroomCountWatcher = watch("bathroomCount");
 
     const Map = useMemo(() => dynamic(() => import("@/app/components/rent-stepper/Map"), {ssr: false}), [locationWatcher]);
 
@@ -60,7 +64,7 @@ const RentModal = () => {
 
     const onBack = () => setStep((value) => value - 1)
 
-    const onNext = () => setStep((value) => value + 1)
+    const onNext = () => setStep((value) => value + 1 <= STEPS.PRICE ? value + 1 : value)
 
     const actionLabel = useMemo(() => {
         if (step === STEPS.PRICE) {
@@ -78,7 +82,7 @@ const RentModal = () => {
         return "Back"
     }, [step])
 
-    let bodyContent: null | JSX.Element = null
+    let bodyContent: null | JSX.Element
 
     if (step === STEPS.CATEGORY) {
         bodyContent = (
@@ -101,17 +105,38 @@ const RentModal = () => {
             <div className="flex flex-col gap-8">
                 <Heading title="Where is your home located?" subtitle="Pin your home on map" center/>
                 <CountrySelect value={locationWatcher} onChange={(value) => setCustomValue("location", value)}/>
-                <Map center={locationWatcher?.latlng} />
+                <Map center={locationWatcher?.latlng}/>
             </div>
         )
-    } else {
+    } else if (step === STEPS.INFO) {
         bodyContent = (
             <div className="flex flex-col gap-8">
-                last step
+                <Heading title="Share some basics about your home" subtitle="What amenities does your home have?"
+                         center/>
+                <Counter title="Guests" subtitle="How many guest do you allow?" value={guestCountWatcher} onChange={(value) => setCustomValue("guestCount", value)}/>
+                <Counter title="Rooms" subtitle="How many rooms are there?" value={roomCountWatcher} onChange={(value) => setCustomValue("roomCount", value)}/>
+                <Counter title="Bathrooms" subtitle="How many bathrooms are there?" value={bathroomCountWatcher} onChange={(value) => setCustomValue("bathroomCount", value)}/>
+            </div>
+        )
+    } else if (step === STEPS.IMAGES) {
+        bodyContent = (
+            <div className="flex flex-col gap-8">
+                images step
+            </div>
+        )
+    } else if (step === STEPS.DESCRIPTION) {
+        bodyContent = (
+            <div className="flex flex-col gap-8">
+                description step
+            </div>
+        )
+    } else { // step === STEPS.PRICE
+        bodyContent = (
+            <div className="flex flex-col gap-8">
+                price step
             </div>
         )
     }
-
 
 
     return (
