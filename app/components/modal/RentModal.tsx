@@ -1,30 +1,37 @@
-'use client'
+'use client';
 
-import Modal from "@/app/components/modal/Modal";
-import useRentModal from "@/app/hooks/useRentModal";
+import axios from 'axios';
+import {toast} from 'react-hot-toast';
+import {FieldValues, SubmitHandler, useForm} from 'react-hook-form';
+import dynamic from 'next/dynamic'
+import {useRouter} from 'next/navigation';
 import {useMemo, useState} from "react";
+
+import useRentModal from '@/app/hooks/useRentModal';
 import Heading from "@/app/components/elements/Heading";
 import {categories} from "@/app/components/category/Categories";
 import CategoryInput from "@/app/components/rent-stepper/CategoryInput";
-import {FieldValues, useForm} from "react-hook-form";
 import CountrySelect from "@/app/components/rent-stepper/CountrySelect";
-import dynamic from "next/dynamic";
 import Counter from "@/app/components/rent-stepper/Counter";
 import ImageUpload from "@/app/components/rent-stepper/ImageUpload";
+import Input from "@/app/components/elements/Input";
+import Modal from "@/app/components/modal/Modal";
 
 enum STEPS {
-    CATEGORY,
-    LOCATION,
-    INFO,
-    IMAGES,
-    DESCRIPTION,
-    PRICE,
+    CATEGORY = 0,
+    LOCATION = 1,
+    INFO = 2,
+    IMAGES = 3,
+    DESCRIPTION = 4,
+    PRICE = 5,
 }
 
 const RentModal = () => {
+    const router = useRouter();
     const rentModal = useRentModal();
 
-    const [step, setStep] = useState<STEPS>(STEPS.CATEGORY);
+    const [isLoading, setIsLoading] = useState(false);
+    const [step, setStep] = useState(STEPS.CATEGORY);
 
     const {
         register,
@@ -35,7 +42,7 @@ const RentModal = () => {
         reset
     } = useForm<FieldValues>({
         defaultValues: {
-            category: "",
+            category: '',
             location: null,
             guestCount: 1,
             roomCount: 1,
@@ -58,15 +65,36 @@ const RentModal = () => {
 
     const setCustomValue = (id: string, value: any) => {
         setValue(id, value, {
-            shouldValidate: true,
             shouldDirty: true,
             shouldTouch: true,
+            shouldValidate: true,
         })
     }
 
     const onBack = () => setStep((value) => value - 1)
 
-    const onNext = () => setStep((value) => value + 1 <= STEPS.PRICE ? value + 1 : value)
+    const onNext = () => setStep((value) => value + 1)
+
+    const onSubmit: SubmitHandler<FieldValues> = (data) => {
+        if (step !== STEPS.PRICE) {
+            return onNext();
+        }
+        setIsLoading(true)
+        axios
+            .post("/api/listings", data)
+            .then(() => {
+                toast.success("Listing created successfully!")
+                router.refresh()
+                reset()
+                setStep(STEPS.CATEGORY)
+                setIsLoading(false)
+                rentModal.onClose()
+            })
+            .catch(() => {
+                toast.error("Something went wrong!")
+                setIsLoading(false)
+            })
+    }
 
     const actionLabel = useMemo(() => {
         if (step === STEPS.PRICE) {
@@ -76,7 +104,7 @@ const RentModal = () => {
         return "Next"
     }, [step])
 
-    const secondActionLabel = useMemo(() => {
+    const secondaryActionLabel = useMemo(() => {
         if (step === STEPS.CATEGORY) {
             return undefined
         }
@@ -97,7 +125,8 @@ const RentModal = () => {
                             onClick={(cate) => setCustomValue("category", cate)}
                             selected={categoryWatcher === category.label}
                             label={category.label}
-                            icon={category.icon}/>
+                            icon={category.icon}
+                        />
                     ))}
                 </div>
             </div>
@@ -105,59 +134,126 @@ const RentModal = () => {
     } else if (step === STEPS.LOCATION) {
         bodyContent = (
             <div className="flex flex-col gap-8">
-                <Heading title="Where is your home located?" subtitle="Pin your home on map" center/>
-                <CountrySelect value={locationWatcher} onChange={(value) => setCustomValue("location", value)}/>
+                <Heading
+                    title="Where is your home located?"
+                    subtitle="Pin your home on map"
+                    center
+                />
+                <CountrySelect
+                    value={locationWatcher}
+                    onChange={(value) => setCustomValue("location", value)}
+                />
                 <Map center={locationWatcher?.latlng}/>
             </div>
         )
     } else if (step === STEPS.INFO) {
         bodyContent = (
             <div className="flex flex-col gap-8">
-                <Heading title="Share some basics about your home" subtitle="What amenities does your home have?"
-                         center/>
-                <Counter title="Guests" subtitle="How many guest do you allow?" value={guestCountWatcher}
-                         onChange={(value) => setCustomValue("guestCount", value)}/>
-                <Counter title="Rooms" subtitle="How many rooms are there?" value={roomCountWatcher}
-                         onChange={(value) => setCustomValue("roomCount", value)}/>
-                <Counter title="Bathrooms" subtitle="How many bathrooms are there?" value={bathroomCountWatcher}
-                         onChange={(value) => setCustomValue("bathroomCount", value)}/>
+                <Heading
+                    title="Share some basics about your home"
+                    subtitle="What amenities does your home have?"
+                    center
+                />
+                <Counter
+                    title="Guests"
+                    subtitle="How many guest do you allow?"
+                    value={guestCountWatcher}
+                    onChange={(value) => setCustomValue("guestCount", value)}
+                />
+                <Counter
+                    title="Rooms"
+                    subtitle="How many rooms are there?"
+                    value={roomCountWatcher}
+                    onChange={(value) => setCustomValue("roomCount", value)}
+                />
+                <Counter
+                    title="Bathrooms"
+                    subtitle="How many bathrooms are there?"
+                    value={bathroomCountWatcher}
+                    onChange={(value) => setCustomValue("bathroomCount", value)}
+                />
             </div>
         )
     } else if (step === STEPS.IMAGES) {
         bodyContent = (
             <div className="flex flex-col gap-8">
-                <Heading title="Add a photo of your place" subtitle="Show guests what your place looks like!"
-                         center/>
-
-                <ImageUpload value={imageSrcWatcher} onChange={(value) => setCustomValue("imageSrc", value)}/>
+                <Heading
+                    title="Add a photo of your place"
+                    subtitle="Show guests what your place looks like!"
+                    center
+                />
+                <ImageUpload
+                    value={imageSrcWatcher}
+                    onChange={(value) => setCustomValue("imageSrc", value)}
+                />
             </div>
         )
     } else if (step === STEPS.DESCRIPTION) {
         bodyContent = (
             <div className="flex flex-col gap-8">
-                description step
+                <Heading
+                    title="How would you describe your place?"
+                    subtitle="Short and sweet works best!"
+                />
+                <Input
+                    id="title"
+                    label="Title"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
+                />
+                <Input
+                    id="description"
+                    label="Description"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
+                    isTextArea
+                />
             </div>
         )
-    } else { // step === STEPS.PRICE
+    } else if (step === STEPS.PRICE) {
         bodyContent = (
             <div className="flex flex-col gap-8">
-                price step
+                <Heading
+                    title="How much does your place cost?"
+                    subtitle="How much will you charge for a night!"
+                    center
+                />
+                <Input
+                    id="price"
+                    label="Price"
+                    type="number"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    formatPrice
+                    required
+                />
             </div>
         )
+    } else {
+        bodyContent = (
+            <>
+            </>
+        )
     }
-
 
     return (
         <Modal
             isOpen={rentModal.isOpen}
             onClose={rentModal.onClose}
-            onSubmit={onNext}
+            onSubmit={handleSubmit(onSubmit)}
             actionLabel={actionLabel}
             secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
-            secondaryActionLabel={secondActionLabel}
-            title="Rent your home"
-            body={bodyContent}/>
-    )
+            secondaryActionLabel={secondaryActionLabel}
+            disabled={isLoading}
+            title="Rent your home!"
+            body={bodyContent}
+        />
+    );
 }
 
 export default RentModal;
