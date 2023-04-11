@@ -25,13 +25,15 @@ export default async function RootLayout({children,}: { children: React.ReactNod
         <html lang="en">
         <body className={font.className}>
         <ClientOnly>
-            <ToasterProvider />
+            <ToasterProvider/>
             <RegisterModal/>
-            <LoginModal />
-            <RentModal />
+            <LoginModal/>
+            <RentModal/>
             <Navbar currentUser={currentUser}/>
         </ClientOnly>
-        {children}
+        <div className=" pb-20 pt-28">
+            {children}
+        </div>
         </body>
         </html>
     )
